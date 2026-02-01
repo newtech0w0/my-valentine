@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Will You Be My Valentine? 💖</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffd6e8, #ffeef6);
+}
+
+/* ================= START SCREEN ================= */
+#startScreen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #ff9abf, #ffe6f2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#startScreen button {
+  padding: 20px 50px;
+  font-size: 22px;
+  border-radius: 50px;
+  border: none;
+  background: #ff4d6d;
+  color: white;
+  cursor: pointer;
+}
+
+/* ================= MAIN APP ================= */
+#app {
+  display: none;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* HEART RAIN */
+.heart {
+  position: fixed;
+  top: -20px;
+  color: #ff4d6d;
+  animation: fall linear forwards;
+  z-index: 1;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh);
+    opacity: 0;
+  }
+}
+
+/* SHAKE */
+@keyframes shake {
+  0% { transform: translate(0); }
+  25% { transform: translate(4px, 4px); }
+  50% { transform: translate(-4px, -4px); }
+  75% { transform: translate(4px, -4px); }
+  100% { transform: translate(0); }
+}
+
+.shake {
+  animation: shake 0.3s;
+}
+
+/* CARD */
+.card {
+  background: white;
+  padding: 35px;
+  border-radius: 20px;
+  text-align: center;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  z-index: 5;
+}
+
+button {
+  padding: 15px 32px;
+  border-radius: 40px;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+#yesBtn {
+  background: #ff4d6d;
+  color: white;
+}
+
+#noBtn {
+  background: #ddd;
+  color: #333;
+  position: fixed;
+  z-index: 999;
+}
+
+/* CELEBRATION */
+#celebration {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #ffb3d9, #ffe6f2);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 20;
+}
+
+#celebration h2 {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+#celebration img {
+  width: 260px;
+  border-radius: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- START SCREEN -->
+<div id="startScreen">
+  <button id="startBtn">Choose Wisely</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="card" id="proposal">
+    <h1 id="question"></h1>
+    <button id="yesBtn">Yes</button>
+    <br><br>
+    <button id="noBtn">No</button>
+  </div>
+</div>
+
+<!-- CELEBRATION -->
+<div id="celebration">
+  <h2 id="yayText"></h2>
+  <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGx0YnQ3NjhiNmZkeGZoM3lobWlxenhuaTVxcXpwZHhlY3UxNXJnNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2rqEdFfkMzXmo/giphy.gif">
+</div>
+
+<!-- AUDIO -->
+<audio id="romanticMusic" src="audio/romantic.mp3"></audio>
+<audio id="chaseMusic" src="audio/chase.mp3"></audio>
+<audio id="happyMusic" src="audio/happy.mp3"></audio>
+
+<script>
+/* ========= CONFIG ========= */
+const GIRL_NAME = "Aditi my Love";
+const YAY_MESSAGE = "I knew you’d say YES 😍💖";
+/* ========================= */
+
+document.getElementById("question").textContent =
+  `${GIRL_NAME}, will you be my Valentine?`;
+document.getElementById("yayText").textContent = YAY_MESSAGE;
+
+const startBtn = document.getElementById("startBtn");
+const startScreen = document.getElementById("startScreen");
+const app = document.getElementById("app");
+
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const celebration = document.getElementById("celebration");
+
+const romantic = document.getElementById("romanticMusic");
+const chase = document.getElementById("chaseMusic");
+const happy = document.getElementById("happyMusic");
+
+let yesScale = 1;
+let chaseStarted = false;
+
+/* HEART RAIN */
+function createHeart() {
+  const h = document.createElement("div");
+  h.className = "heart";
+  h.textContent = "❤️";
+  h.style.left = Math.random() * 100 + "vw";
+  h.style.fontSize = 14 + Math.random() * 20 + "px";
+  h.style.animationDuration = 3 + Math.random() * 3 + "s";
+  document.body.appendChild(h);
+  setTimeout(() => h.remove(), 6000);
+}
+
+/* FADE IN MUSIC */
+function fadeIn(audio) {
+  audio.volume = 0;
+  audio.play();
+  const i = setInterval(() => {
+    audio.volume = Math.min(audio.volume + 0.05, 0.6);
+    if (audio.volume >= 0.6) clearInterval(i);
+  }, 150);
+}
+
+/* START EXPERIENCE */
+startBtn.addEventListener("click", () => {
+  startScreen.style.display = "none";
+  app.style.display = "flex";
+  fadeIn(romantic);
+  setInterval(createHeart, 400);
+});
+
+/* MOVE NO */
+function moveNo() {
+  if (!chaseStarted) {
+    chaseStarted = true;
+    romantic.pause();
+    chase.play();
+  }
+
+  if (navigator.vibrate) navigator.vibrate(60);
+
+  document.body.classList.add("shake");
+  setTimeout(() => document.body.classList.remove("shake"), 300);
+
+  const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
+  const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+
+  noBtn.style.left = x + "px";
+  noBtn.style.top = y + "px";
+
+  // 🚀 YES GROWS FASTER (≈120% SPEED)
+  yesScale += 0.42;
+  yesBtn.style.transform = `scale(${yesScale})`;
+}
+
+/* DESKTOP */
+document.addEventListener("mousemove", e => {
+  const r = noBtn.getBoundingClientRect();
+  const d = Math.hypot(
+    e.clientX - (r.left + r.width / 2),
+    e.clientY - (r.top + r.height / 2)
+  );
+  if (d < 45) moveNo();
+});
+
+/* MOBILE */
+noBtn.addEventListener("touchstart", e => {
+  e.preventDefault();
+  moveNo();
+});
+noBtn.addEventListener("click", e => {
+  e.preventDefault();
+  moveNo();
+});
+
+/* YES */
+yesBtn.addEventListener("click", () => {
+  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+  romantic.pause();
+  chase.pause();
+  happy.play();
+
+  confetti({
+    particleCount: 400,
+    spread: 180,
+    origin: { y: 0.6 }
+  });
+
+  setTimeout(() => {
+    celebration.style.display = "flex";
+  }, 1200);
+});
+</script>
+
+</body>
+</html>
